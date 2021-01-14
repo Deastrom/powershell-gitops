@@ -31,9 +31,15 @@ In my experience there are three kinds of files that are managed in a source rep
 
 4. Secret Files (!Planned)
 
-    These files contain secrets and need to be encrypted.  This file type should work in combination with the other file types meaning that a template or specto file can be secrets.  I think I'll try to use Secure-String encryption with a generated key.
+    For now, use an independent secrets management method.
 
-    These are identified by the extension of `.secret`.
+    ~~These files contain secrets and need to be encrypted.  This file type should work in combination with the other file types meaning that a template or specto file can be secrets.  I think I'll try to use Secure-String encryption with a generated key.~~
+
+    ~~These are identified by the extension of `.secret`.~~
+
+    **NOTE**
+
+    I could use SecureString with -SecureKey and require a 16 character password.
 
 ## Intent Detection
 
@@ -57,4 +63,52 @@ We can imply file intent based on the git diff of the last time the repository w
 
     We should delete the target file from the destination.
 
-We should throw errors when the intent isn't met and provide a parameter for only warning on intent.
+We should throw errors when the change is destructive and provide a parameter for only warning on intent.
+
+## Return Object
+
+The returned powershell object should contain the following for each file in the source directory.
+
+output of *gitops-build.ps1* in psd format, actual export will be clixml format.
+
+```powershell
+@(
+    @{
+        operation = "eps" # One of the following: eps, specto, copy
+        source = @{
+            # Attributes from Get-Item plus...
+            DiffState = "Modified" # One of the following: Added, Modified, or Deleted
+            Hash = # Result from Get-FileHash
+        }
+        epsDiff = # Diff between source and staged if the operation is eps and not secret
+        currentBuild = @{
+            # Attributes from Get-Item plus...
+            Hash = # Result from Get-FileHash
+        }
+    }
+)
+```
+
+output of *gitops-test.ps1* in psd format, actual export will be in clixml format.
+
+```powershell
+@(
+    @{
+        intent = # one of Create, Update, or Delete
+        currentBuild = @{
+            # Attributes from Get-Item plus...
+            Hash = # Result from Get-FileHash
+        }
+        lastBuild = @{
+            # Attributes from Get-Item plus...
+            Hash = # Result from Get-FileHash
+        }
+        onSystem = @{
+            # Attributes from Get-Item plus...
+            Hash = # Result from Get-FileHash
+        }
+    }
+)
+```
+
+output of *gitops-deploy.ps1* is yet to be determined
