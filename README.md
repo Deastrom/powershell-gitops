@@ -41,6 +41,25 @@ In my experience there are three kinds of files that are managed in a source rep
 
     I could use SecureString with -SecureKey and require a 16 character password.
 
+    Suggested password generator and settings results in 105bits of blind entropy.
+
+    https://xkpasswd.net
+
+    ```json
+    {
+        "num_words": 3,
+        "word_length_min": 4,
+        "word_length_max": 4,
+        "case_transform": "RANDOM",
+        "separator_character": "RANDOM",
+        "separator_alphabet": ["!","@","$","%","^","&","*","-","_","+","=",":","|","~","?","/",".",";"],
+        "padding_digits_before": 0,
+        "padding_digits_after": 1,
+        "padding_type": "NONE",
+        "random_increment": "AUTO"
+    }
+    ```
+
 ## Intent Detection
 
 We can imply file intent based on the git diff of the last time the repository was built.  To identify the last time it was built, we'll use a tag.
