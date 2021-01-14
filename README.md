@@ -9,6 +9,8 @@ The goal of this repository is to provide a series of scripts that support the t
 
 The idea of managing configurations comes down to managing the files and scripts needed to configure an application across different systems.  The differences between these systems tends to be an issue for many Administrators.  I really like the Ansible approach to many of the issues I have run into, but the heft of Ansible itself can be daunting to System Administrators.  So instead we pick some core pricipals of file management in Ansible and implement them in Powershell.  I will attempt to do this using as few dependencies as possible, relying primarily on modules provided with the distribution of Powershell Core.
 
+## File Types
+
 In my experience there are three kinds of files that are managed in a source repo.
 
 1. Templates
@@ -32,3 +34,27 @@ In my experience there are three kinds of files that are managed in a source rep
     These files contain secrets and need to be encrypted.  This file type should work in combination with the other file types meaning that a template or specto file can be secrets.  I think I'll try to use Secure-String encryption with a generated key.
 
     These are identified by the extension of `.secret`.
+
+## Intent Detection
+
+We can imply file intent based on the git diff of the last time the repository was built.  To identify the last time it was built, we'll use a tag.
+
+1. File Added
+
+    In this situation, we don't expect the file to be in the destination system.
+
+    We should copy the file over to the target system, creating it.
+
+2. File Modified
+
+    In this situation, we expect the file to exist in the destination system and does not match the file that will be generated, but should match the file that was generated from last built.
+
+    We should copy the file over to the target system, changing it.
+
+3. File Deleted
+
+    In this situation, we expect the file to exist in the destination system and should match the file that was generated from last built.
+
+    We should delete the target file from the destination.
+
+We should throw errors when the intent isn't met and provide a parameter for only warning on intent.
