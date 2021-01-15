@@ -93,15 +93,15 @@ output of *gitops-build.ps1* in psd format, actual export will be clixml format.
 ```powershell
 @(
     @{
-        operation = "eps" # One of the following: eps, specto, copy
-        source = @{
-            # Attributes from Get-Item plus...
-            DiffState = "Modified" # One of the following: Added, Modified, or Deleted
+        Operation = "eps" # One of the following: eps, specto, copy
+        Source = @{
+            File = # Attributes from Get-Item plus...
+            DiffState = # One of the following: A, M, or D
             Hash = # Result from Get-FileHash
         }
-        epsDiff = # Diff between source and staged if the operation is eps and not secret
-        currentBuild = @{
-            # Attributes from Get-Item plus...
+        TemplateDiff = # Diff between source and staged if the operation is eps and not secret
+        CurrentBuild = @{
+            File = # Attributes from Get-Item plus...
             Hash = # Result from Get-FileHash
         }
     }
