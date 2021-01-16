@@ -86,7 +86,7 @@ param (
 # See https://github.com/straightdave/eps for more information
 Import-Module EPS
 
-$Returned = @()
+$Returned = New-Object 'Collections.Generic.List[hashtable]'
 
 If (Test-Path $Destination) {
     $DestinationDirectory = Get-Item $Destination
@@ -94,14 +94,17 @@ If (Test-Path $Destination) {
     $DestinationDirectory = New-Item $Destination -ItemType Directory -Force
 }
 
+Push-Location $Source
+
 ForEach ($SourceFile in $(Get-ChildItem $Source -Recurse -File)) {
     $ReturnedElement = @{}
+    $ReturnedElement.Source = @{}
     $ReturnedElement.Source.File = $SourceFile
     $ReturnedElement.Source.Hash = Get-FileHash $ReturnedElement.Source.File
     If ($GitTag -and $(git status)) {
-        $ReturnedElement.Source.DiffState = (git diff --name-status $GitTag HEAD $Source.FullName)[0]
+        $ReturnedElement.Source.DiffState = git diff --name-status $GitTag HEAD $Source.FullName
     } ElseIf (git status) {
-        $ReturnedElement.Source.DiffState = (git diff --name-status HEAD^ HEAD $Source.FullName)[0]
+        $ReturnedElement.Source.DiffState = git diff --name-status HEAD^ HEAD $Source.FullName
     } Else {
         Write-Warning $(git status)
     }
@@ -120,6 +123,7 @@ ForEach ($SourceFile in $(Get-ChildItem $Source -Recurse -File)) {
     If ($SourceFile.Name.EndsWith($TemplateExtension)) {
         $ReturnedElement.Operation = "Template"
         $DestinationFile.FullName = $DestinationFile.FullName.Replace($TemplateExtension, "")
+        $ReturnedElement.CurrentBuild = @{}
         $ReturnedElement.CurrentBuild.File = Invoke-EpsTemplate -Path $SourceFile.FullName -Binding $TemplateBinding | New-Item -ItemType File -Path $DestinationFile.FullName -Force
         $ReturnedElement.CurrentBuild.Hash = Get-FileHash $ReturnedElement.CurrentBuild.File
         $ReturnedElement.TemplateDiff = Compare-Object $(Get-Content $SourceFile.FullName) $(Get-Content $DestinationFile.FullName)
@@ -127,15 +131,18 @@ ForEach ($SourceFile in $(Get-ChildItem $Source -Recurse -File)) {
         $ReturnedElement.Operation = "Specto"
         If ($SpectoSignature -and ($SourceFile.Name.EndsWith($SpectoSignature))) {
             $DestinationFile.FullName = $DestinationFile.FullName.Replace($SpectoCommon,"").Replace($SpectoSignature,"")
+            $ReturnedElement.CurrentBuild = @{}
             $ReturnedElement.CurrentBuild.File = Copy-Item $SourceFile.FullName -Destination $DestinationFile.FullName -PassThru
             $ReturnedElement.CurrentBuild.Hash = Get-FileHash $ReturnedElement.CurrentBuild.File
         }
     } Else {
         $ReturnedElement.Operation = "Copy"
+        $ReturnedElement.CurrentBuild = @{}
         $ReturnedElement.CurrentBuild.File = Copy-Item $SourceFile.FullName -Destination $DestinationFile.FullName -PassThru
         $ReturnedElement.CurrentBuild.Hash = Get-FileHash $ReturnedElement.CurrentBuild.File
     }
     $Returned.Add($ReturnedElement)
 }
 
-Return $Returned
+Pop-Location
+Write-Output $Returned
