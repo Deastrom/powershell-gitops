@@ -62,12 +62,11 @@ Function Build-GitOpsDirectory {
         [Parameter(Mandatory=$true, ValueFromPipeline=$true)]
         [System.IO.DirectoryInfo]
         $Source,
-        [Parameter(Mandatory=$true)]
         [ValidateScript({
             Test-Path $_ -IsValid
         })]
         [String]
-        $Destination,
+        $Destination = $env:TEMP,
         [Regex]
         $Exclude = '^.*\.md$',
         [String]
@@ -80,8 +79,8 @@ Function Build-GitOpsDirectory {
         $SpectoSignature,
         [String]
         $GitTag,
-        [bool]
-        $WithDiff = $False
+        [Switch]
+        $WithTemplateDiff
     )
     
     Push-Location $Source
@@ -89,27 +88,30 @@ Function Build-GitOpsDirectory {
     Import-Module EPS
 
     try {
-        $Returned = New-Object 'Collections.Generic.List[hashtable]'
-        
         If (Test-Path $Destination) {
             $DestinationDirectory = Get-Item $Destination
         } Else {
             $DestinationDirectory = New-Item $Destination -ItemType Directory -Force
+        }
+
+        $Returned = [ordered]@{
+            Source = $Source.FullName
+            Destination = $DestinationDirectory.FullName
+            Files = New-Object 'Collections.Generic.List[hashtable]'
         }
             
         ForEach ($SourceFile in $(Get-ChildItem $Source -Recurse -File)) {
             $ReturnedElement = @{
                 Operation = $Null
                 Source = @{
-                    File = $SourceFile
-                    Hash = Get-FileHash $SourceFile
+                    File = Get-FileHash $SourceFile
                 }
                 CurrentBuild = @{}
             }
-            If ($GitTag -and $GitDir -and $(git status)) {
-                $ReturnedElement.Source.GitDiffState = git diff --name-status $GitTag HEAD $Source.FullName
-            } ElseIf ($GitDir -and $(git status)) {
-                $ReturnedElement.Source.GitDiffState = git diff --name-status HEAD^ HEAD $Source.FullName
+            If ($GitTag -and $(git status)) {
+                $ReturnedElement.GitDiffState = git diff --name-status $GitTag HEAD $Source.FullName
+            } ElseIf ($(git status)) {
+                $ReturnedElement.GitDiffState = git diff --name-status HEAD^ HEAD $Source.FullName
             }
             If ($Exclude -and ($SourceFile.FullName -match $Exclude)) {
                 $ReturnedElement.Operation = "Excluded"
@@ -126,29 +128,24 @@ Function Build-GitOpsDirectory {
             If ($SourceFile.Name.EndsWith($TemplateExtension)) {
                 $ReturnedElement.Operation = "Template"
                 $DestinationFile.FullName = $DestinationFile.FullName.Replace($TemplateExtension, "")
-                $ReturnedElement.CurrentBuild.File = Invoke-EpsTemplate -Path $SourceFile.FullName -Binding $TemplateBinding | New-Item -ItemType File -Path $DestinationFile.FullName -Force
-                $ReturnedElement.CurrentBuild.Hash = Get-FileHash $ReturnedElement.CurrentBuild.File
-                If ($WithDiff) {
-                    $ReturnedElement.TemplateDiff = Compare-Object $(Get-Content $SourceFile.FullName) $(Get-Content $DestinationFile.FullName)
+                $ReturnedElement.CurrentBuild.File = Invoke-EpsTemplate -Path $SourceFile.FullName -Binding $TemplateBinding | New-Item -ItemType File -Path $DestinationFile.FullName -Force | Get-FileHash
+                If ($WithTemplateDiff) {
+                    $ReturnedElement.TemplateDiff = $(git diff --no-index $SourceFile.FullName $DestinationFile.FullName)
                 }
             } ElseIf ($SourceFile.Name.Contains($SpectoCommon)) {
                 $ReturnedElement.Operation = "Specto"
                 If ($SpectoSignature -and ($SourceFile.Name.EndsWith($SpectoSignature))) {
                     $DestinationFile.FullName = $DestinationFile.FullName.Replace($SpectoCommon,"").Replace($SpectoSignature,"")
-                    $ReturnedElement.CurrentBuild.File = Copy-Item $SourceFile.FullName -Destination $DestinationFile.FullName -PassThru
-                    $ReturnedElement.CurrentBuild.Hash = Get-FileHash $ReturnedElement.CurrentBuild.File
+                    $ReturnedElement.CurrentBuild.File = Copy-Item $SourceFile.FullName -Destination $DestinationFile.FullName -PassThru | Get-FileHash
                 }
             } Else {
                 $ReturnedElement.Operation = "Copy"
-                $ReturnedElement.CurrentBuild.File = Copy-Item $SourceFile.FullName -Destination $DestinationFile.FullName -PassThru
-                $ReturnedElement.CurrentBuild.Hash = Get-FileHash $ReturnedElement.CurrentBuild.File
+                $ReturnedElement.CurrentBuild.File = Copy-Item $SourceFile.FullName -Destination $DestinationFile.FullName -PassThru | Get-FileHash
             }
-            $Returned.Add($ReturnedElement)
+            $Returned.Files.Add($ReturnedElement)
         }
-        
         Write-Output $Returned
     } finally {
-        Remove-Module EPS
         Pop-Location
     }
 }
