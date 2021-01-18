@@ -29,7 +29,10 @@ Function Build-GitOpsDirectory {
     The string used to identify a Specto file as one that needs to be copied.
     
     .PARAMETER GitTag
-    The Tag that represents the build state.  Used in `git diff` call to determine the state of the file.
+    The Tag that represents the build state.  Used in `git diff` call to determine the state of the file.    
+
+    .PARAMETER WithTemplateDiff
+    Include the the output of `git diff --no-index Source Destination` when doing templating.  This aids in the troublshooting of Template files.
     
     .INPUTS
     System.IO.DirectoryInfo can be piped into Source.
@@ -41,7 +44,7 @@ Function Build-GitOpsDirectory {
             "Source": {
                 "File": {}, //Output from Get-Item
                 "Hash": {}, //Output from Get-FileHash
-                "GitDiffState": "" //Output from Git Diff --name-status
+                "GitStatus": "" //Output from Git Diff --name-status
             },
             "CurrentBuild": {
                 "File": {}, //Output from Get-Item
@@ -86,7 +89,11 @@ Function Build-GitOpsDirectory {
     Push-Location $Source
     # See https://github.com/straightdave/eps for more information
     Import-Module EPS
-
+    try {
+        git --version
+    } catch {
+        Write-Error "git is required."
+    }
     try {
         If (Test-Path $Destination) {
             $DestinationDirectory = Get-Item $Destination
