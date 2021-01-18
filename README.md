@@ -1,9 +1,9 @@
 # powershell-gitops
-A series of scripts for use in CI/CD to build, stage, and check config files using concepts inspired from Ansible.
+A module for use in CI/CD to build, stage, and check config files using concepts inspired from Ansible.
 
 ## Goal
 
-The goal of this repository is to provide a series of scripts that support the transformation of generic files into files specific to a system.
+The goal of this repository is to provide a module that supports the transformation of generic files into files specific to a system.
 
 ## Concept
 
@@ -88,24 +88,23 @@ We should throw errors when the change is destructive and provide a parameter fo
 
 The returned powershell object should contain the following for each file in the source directory.
 
-output of *gitops-build.ps1* in psd format, actual export will be clixml format.
+output of *Build-GitOpsDirectory*.
 
-```powershell
-@(
-    @{
-        Operation = "eps" # One of the following: eps, specto, copy
-        Source = @{
-            File = # Attributes from Get-Item plus...
-            DiffState = # One of the following: A, M, or D
-            Hash = # Result from Get-FileHash
-        }
-        TemplateDiff = # Diff between source and staged if the operation is eps and not secret
-        CurrentBuild = @{
-            File = # Attributes from Get-Item plus...
-            Hash = # Result from Get-FileHash
+```jsonc
+[
+    {
+        "Operation": "Template", //One of the following... Template, Specto, Copy, Excluded
+        "Source": {
+            "File": {}, //Output from Get-Item
+            "Hash": {}, //Output from Get-FileHash
+            "GitDiffState": "" //Output from Git Diff --name-status
+        },
+        "CurrentBuild": {
+            "File": {}, //Output from Get-Item
+            "Hash": {} //Output from Get-FileHash
         }
     }
-)
+]
 ```
 
 output of *gitops-test.ps1* in psd format, actual export will be in clixml format.
