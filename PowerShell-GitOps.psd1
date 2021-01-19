@@ -51,7 +51,9 @@
     # ProcessorArchitecture = ''
 
     # Modules that must be imported into the global environment prior to importing this module
-    # RequiredModules = @()
+    RequiredModules = @(
+        @{ModuleName="EPS";ModuleVersion="1.0.0";GUID="f24c1ca7-e4fd-4b7d-8ff8-75ef7f7ea162"}
+    )
 
     # Assemblies that must be loaded prior to importing this module
     # RequiredAssemblies = @()
