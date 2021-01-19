@@ -158,6 +158,10 @@ Function Build-GitOpsDirectory {
                     $ReturnedElement.Operation = "Copy"
                     $ReturnedElement.CurrentBuild.FileHash = Copy-Item $SourceFile.FullName -Destination $DestinationFile.FullName -PassThru | Get-FileHash
                 }
+                $ReturnedElement.Source.FileHash.Path = $ReturnedElement.Source.FileHash.Path.Replace($Returned.Source, "")
+                If ($ReturnedElement.CurrentBuild.FileHash.Path) {
+                    $ReturnedElement.CurrentBuild.FileHash.Path = $ReturnedElement.CurrentBuild.FileHash.Path.Replace($Returned.Destination,"")
+                }
                 $Returned.Files.Add($ReturnedElement)
             }
             Write-Output $Returned
