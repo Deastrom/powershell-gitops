@@ -38,20 +38,23 @@ Function Build-GitOpsDirectory {
     System.IO.DirectoryInfo can be piped into Source.
 
     .OUTPUTS
-    [
-        {
-            "Operation": "Template", //One of the following... Template, Specto, Copy, Excluded
-            "Source": {
-                "File": {}, //Output from Get-Item
-                "Hash": {}, //Output from Get-FileHash
-                "GitStatus": "" //Output from Git Diff --name-status
-            },
-            "CurrentBuild": {
-                "File": {}, //Output from Get-Item
-                "Hash": {} //Output from Get-FileHash
+    {
+        "Source": "", //Source Directory full path,
+        "Destination": "", //Destination Directory full path,
+        "Files": [
+            {
+                "Operation": "",//One of Template, Specto, Copy, or Excluded,
+                "Source": {
+                    "FileHash": {},//Results from `Get-FileHash`,
+                    "GitDiffState": ""//Results from `git diff --name-status`
+                },
+                "CurrentBuild": {
+                    "FileHash": {} //Results from `Get-FileHash`
+                },
+                "TemplateDiff": [] //Results from `git diff --no-index` if WithTemplateDiff switch is included
             }
-        }
-    ]
+        ]
+    }
 
     .LINK
     EPS ( Embedded PowerShell )
@@ -91,7 +94,7 @@ Function Build-GitOpsDirectory {
         # See https://github.com/straightdave/eps for more information
         Import-Module EPS
         try {
-            git --version
+            git --version 1>$null
         }
         catch {
             Write-Error "git is required."
@@ -114,15 +117,15 @@ Function Build-GitOpsDirectory {
                 $ReturnedElement = @{
                     Operation    = $Null
                     Source       = @{
-                        File = Get-FileHash $SourceFile
+                        FileHash = Get-FileHash $SourceFile
                     }
                     CurrentBuild = @{}
                 }
                 If ($GitTag -and $(git status)) {
-                    $ReturnedElement.GitDiffState = git diff --name-status $GitTag HEAD $Source.FullName
+                    $ReturnedElement.Source.GitDiffState = git diff --name-status $GitTag HEAD $Source.FullName
                 }
                 ElseIf ($(git status)) {
-                    $ReturnedElement.GitDiffState = git diff --name-status HEAD^ HEAD $Source.FullName
+                    $ReturnedElement.Source.GitDiffState = git diff --name-status HEAD^ HEAD $Source.FullName
                 }
                 If ($Exclude -and ($SourceFile.FullName -match $Exclude)) {
                     $ReturnedElement.Operation = "Excluded"
@@ -139,7 +142,7 @@ Function Build-GitOpsDirectory {
                 If ($SourceFile.Name.EndsWith($TemplateExtension)) {
                     $ReturnedElement.Operation = "Template"
                     $DestinationFile.FullName = $DestinationFile.FullName.Replace($TemplateExtension, "")
-                    $ReturnedElement.CurrentBuild.File = Invoke-EpsTemplate -Path $SourceFile.FullName -Binding $TemplateBinding | New-Item -ItemType File -Path $DestinationFile.FullName -Force | Get-FileHash
+                    $ReturnedElement.CurrentBuild.FileHash = Invoke-EpsTemplate -Path $SourceFile.FullName -Binding $TemplateBinding | New-Item -ItemType File -Path $DestinationFile.FullName -Force | Get-FileHash
                     If ($WithTemplateDiff) {
                         $ReturnedElement.TemplateDiff = $(git diff --no-index $SourceFile.FullName $DestinationFile.FullName)
                     }
@@ -148,12 +151,12 @@ Function Build-GitOpsDirectory {
                     $ReturnedElement.Operation = "Specto"
                     If ($SpectoSignature -and ($SourceFile.Name.EndsWith($SpectoSignature))) {
                         $DestinationFile.FullName = $DestinationFile.FullName.Replace($SpectoCommon, "").Replace($SpectoSignature, "")
-                        $ReturnedElement.CurrentBuild.File = Copy-Item $SourceFile.FullName -Destination $DestinationFile.FullName -PassThru | Get-FileHash
+                        $ReturnedElement.CurrentBuild.FileHash = Copy-Item $SourceFile.FullName -Destination $DestinationFile.FullName -PassThru | Get-FileHash
                     }
                 }
                 Else {
                     $ReturnedElement.Operation = "Copy"
-                    $ReturnedElement.CurrentBuild.File = Copy-Item $SourceFile.FullName -Destination $DestinationFile.FullName -PassThru | Get-FileHash
+                    $ReturnedElement.CurrentBuild.FileHash = Copy-Item $SourceFile.FullName -Destination $DestinationFile.FullName -PassThru | Get-FileHash
                 }
                 $Returned.Files.Add($ReturnedElement)
             }

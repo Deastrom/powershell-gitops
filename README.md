@@ -91,20 +91,23 @@ The returned powershell object should contain the following for each file in the
 output of *Build-GitOpsDirectory*.
 
 ```jsonc
-[
-    {
-        "Operation": "Template", //One of the following... Template, Specto, Copy, Excluded
-        "Source": {
-            "File": {}, //Output from Get-Item
-            "Hash": {}, //Output from Get-FileHash
-            "GitDiffState": "" //Output from Git Diff --name-status
-        },
-        "CurrentBuild": {
-            "File": {}, //Output from Get-Item
-            "Hash": {} //Output from Get-FileHash
+{
+    "Source": "", //Source Directory full path,
+    "Destination": "", //Destination Directory full path,
+    "Files": [
+        {
+            "Operation": "",//One of Template, Specto, Copy, or Excluded,
+            "Source": {
+                "FileHash": {},//Results from `Get-FileHash`,
+                "GitDiffState": ""//Results from `git diff --name-status`
+            },
+            "CurrentBuild": {
+                "FileHash": {} //Results from `Get-FileHash`
+            },
+            "TemplateDiff": [] //Results from `git diff --no-index` if WithTemplateDiff switch is included
         }
-    }
-]
+    ]
+}
 ```
 
 output of *gitops-test.ps1* in psd format, actual export will be in clixml format.
