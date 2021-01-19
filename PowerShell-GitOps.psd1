@@ -30,7 +30,7 @@
     Copyright         = '(c) Deastrom. All rights reserved.'
 
     # Description of the functionality provided by this module
-    # Description = ''
+    Description = 'A module for use in CI/CD to build, stage, and check config files using concepts inspired from Ansible.'
 
     # Minimum version of the PowerShell engine required by this module
     # PowerShellVersion = ''
