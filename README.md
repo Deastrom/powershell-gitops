@@ -1,9 +1,9 @@
 # powershell-gitops
-A series of scripts for use in CI/CD to build, stage, and check config files using concepts inspired from Ansible.
+A module for use in CI/CD to build, stage, and check config files using concepts inspired from Ansible.
 
 ## Goal
 
-The goal of this repository is to provide a series of scripts that support the transformation of generic files into files specific to a system.
+The goal of this repository is to provide a module that supports the transformation of generic files into files specific to a system.
 
 ## Concept
 
@@ -88,24 +88,26 @@ We should throw errors when the change is destructive and provide a parameter fo
 
 The returned powershell object should contain the following for each file in the source directory.
 
-output of *gitops-build.ps1* in psd format, actual export will be clixml format.
+output of *Build-GitOpsDirectory*.
 
-```powershell
-@(
-    @{
-        operation = "eps" # One of the following: eps, specto, copy
-        source = @{
-            # Attributes from Get-Item plus...
-            DiffState = "Modified" # One of the following: Added, Modified, or Deleted
-            Hash = # Result from Get-FileHash
+```jsonc
+{
+    "Source": "", //Source Directory full path,
+    "Destination": "", //Destination Directory full path,
+    "Files": [
+        {
+            "Operation": "",//One of Template, Specto, Copy, or Excluded,
+            "Source": {
+                "FileHash": {},//Results from `Get-FileHash`,
+                "GitDiffState": ""//Results from `git diff --name-status`
+            },
+            "CurrentBuild": {
+                "FileHash": {} //Results from `Get-FileHash`
+            },
+            "TemplateDiff": [] //Results from `git diff --no-index` if WithTemplateDiff switch is included
         }
-        epsDiff = # Diff between source and staged if the operation is eps and not secret
-        currentBuild = @{
-            # Attributes from Get-Item plus...
-            Hash = # Result from Get-FileHash
-        }
-    }
-)
+    ]
+}
 ```
 
 output of *gitops-test.ps1* in psd format, actual export will be in clixml format.

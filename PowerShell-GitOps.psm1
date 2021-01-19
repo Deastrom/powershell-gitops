@@ -1,0 +1,1 @@
+. $PSScriptRoot\Build-GitOpsDirectory.ps1
