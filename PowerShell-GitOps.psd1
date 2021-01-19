@@ -97,7 +97,7 @@
         PSData = @{
 
             # Tags applied to this module. These help with module discovery in online galleries.
-            Tags = @("Configuration Management", "GitOps", "DevOps", "CI/CD")
+            Tags = @("ConfigurationManagement", "GitOps", "DevOps", "CI/CD")
 
             # A URL to the license for this module.
             # LicenseUri = ''
