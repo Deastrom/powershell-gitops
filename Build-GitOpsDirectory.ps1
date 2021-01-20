@@ -100,12 +100,10 @@ Function Build-GitOpsDirectory {
             Write-Error "git is required."
         }
         try {
-            If (Test-Path $Destination) {
-                $DestinationDirectory = Get-Item $Destination
+            If (-not $(Test-Path $Destination)) {
+                New-Item $Destination -ItemType Directory
             }
-            Else {
-                $DestinationDirectory = New-Item $Destination -ItemType Directory -Force
-            }
+            $DestinationDirectory = Get-Item $Destination
 
             $Returned = [ordered]@{
                 Source      = $Source.FullName
@@ -114,7 +112,7 @@ Function Build-GitOpsDirectory {
             }
 
             Write-Verbose "GitOps Source = $($Source.FullName)"
-            Write-Verbose "GitOps Destination = $($Destination.FullName)"
+            Write-Verbose "GitOps Destination = $($DestinationDirectory.FullName)"
             ForEach ($SourceFile in $(Get-ChildItem $Source -Recurse -File)) {
                 $ReturnedElement = @{
                     Operation    = $Null
