@@ -145,7 +145,7 @@ Function Build-GitOpsDirectory {
                 If ($SourceFile.Name.EndsWith($TemplateExtension)) {
                     $ReturnedElement.Operation = "Template"
                     $DestinationFile.FullName = $DestinationFile.FullName.Replace($TemplateExtension, "")
-                    Write-Verbos "$($SourceFile.FullName) Templated to $($DestinationFile.FullName)"
+                    Write-Verbose "$($SourceFile.FullName) Templated to $($DestinationFile.FullName)"
                     $ReturnedElement.CurrentBuild.FileHash = Invoke-EpsTemplate -Path $SourceFile.FullName -Binding $TemplateBinding | New-Item -ItemType File -Path $DestinationFile.FullName -Force | Get-FileHash
                     If ($WithTemplateDiff) {
                         $ReturnedElement.TemplateDiff = $(git diff --no-index $SourceFile.FullName $DestinationFile.FullName)
@@ -155,15 +155,15 @@ Function Build-GitOpsDirectory {
                     $ReturnedElement.Operation = "Specto"
                     If ($SpectoSignature -and ($SourceFile.Name.EndsWith($SpectoSignature))) {
                         $DestinationFile.FullName = $DestinationFile.FullName.Replace($SpectoCommon, "").Replace($SpectoSignature, "")
-                        Write-Verbose "$($Source.FulllName) Copied to $($DestinationFile.FullName)"
+                        Write-Verbose "$($SourceFile.FullName) Copied to $($DestinationFile.FullName)"
                         $ReturnedElement.CurrentBuild.FileHash = Copy-Item $SourceFile.FullName -Destination $DestinationFile.FullName -PassThru | Get-FileHash
                     } Else {
-                        Write-Verbose "$($Source.FullName) Skipped"
+                        Write-Verbose "$($SourceFile.FullName) Skipped"
                     }
                 }
                 Else {
                     $ReturnedElement.Operation = "Copy"
-                    Write-Verbose "$($Source.FulllName) Copied to $($DestinationFile.FullName)"
+                    Write-Verbose "$($SourceFile.FullName) Copied to $($DestinationFile.FullName)"
                     $ReturnedElement.CurrentBuild.FileHash = Copy-Item $SourceFile.FullName -Destination $DestinationFile.FullName -PassThru | Get-FileHash
                 }
                 $ReturnedElement.Source.FileHash.Path = $ReturnedElement.Source.FileHash.Path.Replace($Returned.Source, "")
