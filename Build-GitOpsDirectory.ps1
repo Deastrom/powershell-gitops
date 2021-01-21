@@ -66,10 +66,13 @@ Function Build-GitOpsDirectory {
     [CmdletBinding(SupportsShouldProcess = $true)]
     param (
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
-        [System.IO.DirectoryInfo]
+        [ValidateScript( {
+                Test-Path $_ -PathType Container
+            })]
+        [String]
         $Source,
         [ValidateScript( {
-                Test-Path $_ -IsValid
+                Test-Path $_ -IsValid -PathType Container
             })]
         [String]
         $Destination = $env:TEMP,
@@ -90,30 +93,28 @@ Function Build-GitOpsDirectory {
     )
 
     Process {
+        Write-Verbose "Set Location to $Source to provide context for git commands."
         Push-Location $Source
         # See https://github.com/straightdave/eps for more information
+        Write-Verbose "Import the EPS module which will be used for Template files with the $TemplateExtension extension."
         Import-Module EPS
+        Write-Verbose "Get the Directory Info for Source and Directory"
+        $SourceDirectory = Get-Item -Path $Source
+        If (-not $(Test-Path $Destination)) {
+            New-Item $Destination -ItemType Directory 1>$null
+        }
+        $DestinationDirectory = Get-Item -Path $Destination
+        $Returned = [ordered]@{
+            Source = $SourceDirectory.FullName
+            Destination = $DestinationDirectory.FullName
+            Files = New-Object 'Collections.Generic.List[hashtable]'
+        }
         try {
+            Write-Verbose "Test that git is installed and available."
             git --version 1>$null
-        }
-        catch {
-            Write-Error "git is required."
-        }
-        try {
-            If (-not $(Test-Path $Destination)) {
-                New-Item $Destination -ItemType Directory
-            }
-            $DestinationDirectory = Get-Item $Destination
-
-            $Returned = [ordered]@{
-                Source      = $Source.FullName
-                Destination = $DestinationDirectory.FullName
-                Files       = New-Object 'Collections.Generic.List[hashtable]'
-            }
-
-            Write-Verbose "GitOps Source = $($Source.FullName)"
-            Write-Verbose "GitOps Destination = $($DestinationDirectory.FullName)"
-            ForEach ($SourceFile in $(Get-ChildItem $Source -Recurse -File)) {
+            ForEach ($SourceFile in $(Get-ChildItem $SourceDirectory.FullName -Recurse -File)) {
+                Write-Verbose "Processing $SourceFile"
+                Write-Verbose "Initial ReturnedElement and get FileHash for $SourceFile."
                 $ReturnedElement = @{
                     Operation    = $Null
                     Source       = @{
@@ -122,10 +123,12 @@ Function Build-GitOpsDirectory {
                     CurrentBuild = @{}
                 }
                 If ($GitTag -and $(git status)) {
-                    $ReturnedElement.Source.GitDiffState = git diff --name-status $GitTag HEAD $Source.FullName
+                    Write-Verbose "Setting ReturnedElement.Source.GitDiffState with 'git diff --name-status $GitTag HEAD $($SourceFile.FullName)'"
+                    $ReturnedElement.Source.GitDiffState = git diff --name-status $GitTag HEAD $SourceFile.FullName
                 }
                 ElseIf ($(git status)) {
-                    $ReturnedElement.Source.GitDiffState = git diff --name-status HEAD^ HEAD $Source.FullName
+                    Write-Verbose "Setting ReturnedElement.Source.GitDiffState with 'git diff --name-status HEAD^ HEAD $($SourceFile.FullName)'"
+                    $ReturnedElement.Source.GitDiffState = git diff --name-status HEAD^ HEAD $SourceFile.FullName
                 }
                 If ($Exclude -and ($SourceFile.FullName -match $Exclude)) {
                     $ReturnedElement.Operation = "Excluded"
@@ -134,8 +137,8 @@ Function Build-GitOpsDirectory {
                     Continue
                 }
                 $DestinationFile = @{
-                    FullName  = $SourceFile.FullName.Replace($Source.FullName, $DestinationDirectory.FullName)
-                    Directory = $SourceFile.Directory.FullName.Replace($Source.FullName, $DestinationDirectory.FullName)
+                    FullName  = $($SourceFile.FullName.Replace($Returned.Source, $Returned.Destination))
+                    Directory = $($SourceFile.Directory.FullName.Replace($Returned.Source, $Returned.Destination))
                 }
                 If (-not $(Test-Path $DestinationFile.Directory)) {
                     New-item $DestinationFile.Directory -ItemType Directory -Force 1>$null
