@@ -1,10 +1,15 @@
 Function Test-GitOpsDrift {
-    [CmdletBinding()]
     param(
+        [ValidateScript( {
+                Test-Path $_ -PathType Container
+            })]
         [Parameter()]
         [String]
         $Build = $env:TEMP,
 
+        [ValidateScript( {
+                Test-Path $_ -PathType Container
+            })]
         [Parameter(Mandatory = $true)]
         [String]
         $Source,
