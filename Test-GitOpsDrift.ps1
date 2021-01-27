@@ -15,6 +15,7 @@ Function Test-GitOpsDrift {
         [Parameter(Mandatory = $true)]
         [String]
         $Destination,
+        [Alias("Session")]
         [System.Management.Automation.Runspaces.PSSession]
         $ToSession,
         [String]
