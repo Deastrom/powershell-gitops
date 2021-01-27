@@ -13,9 +13,6 @@ Function Test-GitOpsDrift {
         [String]
         $Source,
         [Parameter(Mandatory = $true)]
-        [ValidateScript( {
-            Test-Path $_ -PathType Container
-        })]
         [String]
         $Destination,
         [System.Management.Automation.Runspaces.PSSession]
@@ -31,6 +28,9 @@ Function Test-GitOpsDrift {
         [String]
         $SpectoSignature
     )
+    If (-not $(Invoke-Command -ScriptBlock { Test-Path $using:Destination } @InvCmdParams)) {
+        Write-Error "$Destination directory not found."
+    }
     $SourceDirectory = Get-Item $Source
     $BuildDirectory = Get-Item $Build
     $DestinationDirectory = Get-Item $Destination
