@@ -1,5 +1,5 @@
 Function Test-GitOpsDrift {
-    [CmdletBinding(SupportsShouldProcess = $true)]
+    [CmdletBinding()]
     param(
         [ValidateScript( {
                 Test-Path $_ -PathType Container
