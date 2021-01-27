@@ -1,5 +1,4 @@
 Function Test-GitOpsDrift {
-    [CmdletBinding()]
     param(
         [ValidateScript( {
                 Test-Path $_ -PathType Container
