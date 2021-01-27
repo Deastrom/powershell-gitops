@@ -44,13 +44,10 @@ Function Build-GitOpsSource {
     .PARAMETER SpectoSignature
     The string used to identify a Specto file as one that needs to be copied.
 
-    .PARAMETER GitTag
-    The Tag that represents the build state.  Used in `git diff` call to determine
-    the state of the file.
-
     .PARAMETER WithTemplateDiff
-    Include the the output of `git diff --no-index Source Destination` when doing
-    templating.  This aids in the troublshooting of Template files.
+    When used in combination with Verbose it includes the the output of
+    `git diff --no-index Source Destination` when doing  This aids in the troublshooting
+    of Template files.
 
     .INPUTS
     System.IO.DirectoryInfo can be piped into Source.
@@ -90,8 +87,6 @@ Function Build-GitOpsSource {
         $SpectoCommon = ".specto",
         [String]
         $SpectoSignature,
-        [String]
-        $GitTag,
         [Switch]
         $WithTemplateDiff
     )
