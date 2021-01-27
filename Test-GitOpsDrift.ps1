@@ -4,27 +4,42 @@ Function Test-GitOpsDrift {
         [ValidateScript( {
                 Test-Path $_ -PathType Container
             })]
+        [Parameter()]
         [String]
         $Build = $env:TEMP,
+
         [ValidateScript( {
                 Test-Path $_ -PathType Container
             })]
         [Parameter(Mandatory = $true)]
         [String]
         $Source,
+
         [Parameter(Mandatory = $true)]
         [String]
         $Destination,
+
+        [Parameter()]
         [System.Management.Automation.Runspaces.PSSession]
         $ToSession,
+
+        [Parameter()]
         [String]
         $GitTag,
+
+        [Parameter()]
         [Regex]
         $Exclude = '^.*\.md$',
+
+        [Parameter()]
         [String]
         $TemplateExtension = ".eps1",
+
+        [Parameter()]
         [String]
         $SpectoCommon = ".specto",
+
+        [Parameter()]
         [String]
         $SpectoSignature
     )
