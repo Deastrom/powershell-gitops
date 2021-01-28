@@ -81,6 +81,7 @@ Function Test-GitOpsDrift {
                     }
                 }
             }
+            Write-Debug "$($Files | ConvertTo-Json -Depth 100)"
             ForEach ($SourceFile in $(Get-ChildItem $SourceDirectory.FullName -Recurse -File)) {
                 $SourceFileRelPath = $SourceFile.FullName.Replace($SourceDirectory.FullName, "")
                 $BuildFile = @{
