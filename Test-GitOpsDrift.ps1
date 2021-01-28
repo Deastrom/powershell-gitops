@@ -43,6 +43,10 @@ Function Test-GitOpsDrift {
         $SpectoSignature
     )
     Process {
+        $InvCmdParams = @{}
+        If ($PSBoundParameters['ToSession']) {
+            $InvCmdParams.Session = $ToSession
+        }
         If (-not $(Invoke-Command -ScriptBlock { Test-Path $using:Destination } @InvCmdParams)) {
             Write-Error "$Destination directory not found."
         }
@@ -51,10 +55,6 @@ Function Test-GitOpsDrift {
         $DestinationDirectory = Get-Item $Destination
         Push-Location $SourceDirectory
         Try {
-            $InvCmdParams = @{}
-            If ($PSBoundParameters['ToSession']) {
-                $InvCmdParams.Session = $ToSession
-            }
             $Files = @{}
             If ($PSBoundParameters['GitTag']) {
                 $GitStatusCmdOutput = git diff --name-status $GitTag HEAD
