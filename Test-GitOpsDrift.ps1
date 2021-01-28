@@ -174,7 +174,7 @@ Function Test-GitOpsDrift {
                 }
                 $Files["$SourceFileRelPath"].Checked = $true
             }
-            ForEach ($File in $($Files | Where-Object checked -eq $false)) {
+            ForEach ($File in $($Files.GetEnumerator() | Where-Object checked -eq $false)) {
                 # check all other files, should be the deleted files
                 Switch ($Files["$SourceFileRelPath"].GitStatus) {
                     'D' {
