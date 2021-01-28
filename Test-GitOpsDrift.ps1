@@ -112,16 +112,19 @@ Function Test-GitOpsDrift {
                         If ($null -ne $DestinationFileHash) {
                             Write-Warning "$SourceFileRelPath was Added but $DestinationFileRelPath already exists in $($DestinationDirectory.FullName)"
                         }
+                        $Files["$SourceFileRelPath"].Checked = $true
                         Break
                     }
                     'C' {
                         # copy of a file into a new one
                         Write-Warning "$SourceFileRelPath has as a status of 'C'. This case is not yet handled."
+                        $Files["$SourceFileRelPath"].Checked = $true
                         Break
                     }
                     'D' {
                         # deletion of a file
                         Write-Warning "$SourceFileRelPath was Deleted since last build, $($DestinationDirectory.FullName) will be left alone, consider deleting."
+                        $Files["$SourceFileRelPath"].Checked = $true
                         Break
                     }
                     'M' {
@@ -133,6 +136,7 @@ Function Test-GitOpsDrift {
                         ElseIf ($BuildFileHash.Hash -eq $DestinationFileHash.Hash) {
                             Write-Warning "$SourceFileRelPath was Modified but $($DestinationFile.Fullname) matches the hash of the $($BuildFile.FullName) file. File may have already been deployed."
                         }
+                        $Files["$SourceFileRelPath"].Checked = $true
                         Break
                     }
                     'R' {
@@ -143,21 +147,25 @@ Function Test-GitOpsDrift {
                             Write-Warning "$SourceFileRelPath was renamed from $fromFile, but $DestinationFileRelPath already exists in $($DestinationDirectory.FullName)"
                         }
                         Write-Warning "$SourceFileRelPath was renamed from $fromFile, consider deleting any file that was generated from $fromFile."
+                        $Files["$SourceFileRelPath"].Checked = $true
                         Break
                     }
                     'T' {
                         # change in the type of the file
                         Write-Warning "$SourceFileRelPath has as a status of 'T'. This case is not yet handled."
+                        $Files["$SourceFileRelPath"].Checked = $true
                         Break
                     }
                     'U' {
                         # file is unmerged
                         Write-Error "$SourceFileRelPath has as a status of 'U'. All files shoudl be merged at this point."
+                        $Files["$SourceFileRelPath"].Checked = $true
                         Break
                     }
                     'X' {
                         # "unknown" change type (bug)
                         Write-Error "$SourceFileRelPath has as a status of 'X'. Git 'X' is a unkown change type... there may be a bug."
+                        $Files["$SourceFileRelPath"].Checked = $true
                         Break
                     }
                     Default {
@@ -172,7 +180,6 @@ Function Test-GitOpsDrift {
                         Break
                     }
                 }
-                $Files["$SourceFileRelPath"].Checked = $true
             }
             ForEach ($File in $($Files.GetEnumerator() | Where-Object checked -eq $false)) {
                 # check all other files, should be the deleted files
