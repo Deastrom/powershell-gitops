@@ -52,7 +52,7 @@ Function Test-GitOpsDrift {
         }
         $SourceDirectory = Get-Item $Source
         $BuildDirectory = Get-Item $Build
-        $DestinationDirectory = Get-Item $Destination
+        $DestinationDirectory = Invoke-Command -ScriptBlock { Get-Item $using:Destination } @InvCmdParams
         Push-Location $SourceDirectory
         Try {
             $Files = @{}
