@@ -100,6 +100,8 @@ Function Test-GitOpsDrift {
                     If ($SpectoSignature -and ($SourceFile.Name.EndsWith($SpectoSignature))) {
                         $BuildFile.FullName = $BuildFile.FullName.Replace($SpectoCommon, "").Replace($SpectoSignature, "")
                         $DestinationFile.FullName = $DestinationFile.FullName.Replace($SpectoCommon, "").Replace($SpectoSignature, "")
+                    } Else {
+                        Continue
                     }
                 }
                 $BuildFileHash = Get-FileHash $BuildFile.FullName
