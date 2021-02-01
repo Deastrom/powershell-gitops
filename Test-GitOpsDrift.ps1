@@ -73,7 +73,7 @@ Function Test-GitOpsDrift {
                     $GitSrcFromFileInfo = [System.IO.FileInfo](Join-Path $SourceDirectory $GitStatusArray[1])
                     $Files["$GitSrcFile"] = @{
                         FullName = $GitSrcFileInfo.FullName
-                        Parent = $GitSrcFileInfo.Parent
+                        Parent = $GitSrcFileInfo.DirectoryName
                         FromFile  = $GitSrcFromFileInfo.FullName.Replace("$($SourceDirectory.FullName)", "")
                         GitStatus = $GitStatusArray[0]
                     }
@@ -84,7 +84,7 @@ Function Test-GitOpsDrift {
                     $GitSrcFile = $GitSrcFileInfo.FullName.Replace("$($SourceDirectory.FullName)", "")
                     $Files["$GitSrcFile"] = @{
                         FullName = $GitSrcFileInfo.FullName
-                        Parent = $GitSrcFileInfo.Parent
+                        Parent = $GitSrcFileInfo.DirectoryName
                         FromFile  = $GitSrcFile
                         GitStatus = $GitStatusArray[0]
                     }
