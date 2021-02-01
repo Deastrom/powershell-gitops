@@ -64,6 +64,7 @@ Function Test-GitOpsDrift {
             }
             ForEach ($Line in $GitStatusCmdOutput) {
                 $GitStatusArray = $Line.Split("`t")
+                Write-Debug $GitStatusArray.Count
                 If ($GitStatusArray.Count -eq 3) {
                     $GitSrcFilePath = ([System.IO.FileInfo]($GitStatusArray[2])).FullName
                     Write-Debug $GitSrcFilePath
