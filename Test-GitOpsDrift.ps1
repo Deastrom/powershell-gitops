@@ -111,7 +111,7 @@ Function Test-GitOpsDrift {
                         Continue
                     }
                 }
-                $BuildFileHash = Get-FileHash $BuildFile.FullName
+                $BuildFileHash = Get-FileHash $BuildFile.FullName -ErrorAction SilentlyContinue
                 $DestinationFileHash = Invoke-Command -ScriptBlock { Get-FileHash $using:DestinationFile.FullName -ErrorAction SilentlyContinue } @InvCmdParams
                 Switch ($File.Value.GitStatus) {
                     'A' {
