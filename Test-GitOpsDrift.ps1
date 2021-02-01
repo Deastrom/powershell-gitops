@@ -51,7 +51,7 @@ Function Test-GitOpsDrift {
             Write-Error "$Destination directory not found."
         }
         $SourceDirectory = Get-Item $Source
-        Write-Debug "$SourceDirectory.FullName"
+        Write-Debug "$($SourceDirectory.FullName)"
         $BuildDirectory = Get-Item $Build
         $DestinationDirectory = Invoke-Command -ScriptBlock { Get-Item $using:Destination } @InvCmdParams
         Push-Location $SourceDirectory
@@ -67,10 +67,10 @@ Function Test-GitOpsDrift {
                 $GitStatusArray = $Line.Split("`t")
                 Write-Debug $GitStatusArray.Count
                 If ($GitStatusArray.Count -eq 3) {
-                    $GitSrcFilePath = ([System.IO.FileInfo]($GitStatusArray[2])).FullName
+                    $GitSrcFilePath = ([System.IO.FileInfo](Join-Path $SourceDirectory $GitStatusArray[2])).FullName
                     Write-Debug $GitSrcFilePath
                     $GitSrcFile = $GitSrcFilePath.Replace("$($SourceDirectory.FullName)", "")
-                    $GitSrcFileFromFile = ([System.IO.FileInfo]($GitStatusArray[1])).FullName
+                    $GitSrcFileFromFile = ([System.IO.FileInfo](Join-Path $SourceDirectory $GitStatusArray[1])).FullName
                     $Files["$GitSrcFile"] = @{
                         FromFile  = $GitSrcFileFromFile.Replace("$($SourceDirectory.FullName)", "")
                         GitStatus = $GitStatusArray[0]
@@ -78,7 +78,7 @@ Function Test-GitOpsDrift {
                     }
                 }
                 ElseIf ($GitStatusArray.Count -eq 2) {
-                    $GitSrcFilePath = ([System.IO.FileInfo]($GitStatusArray[1])).FullName
+                    $GitSrcFilePath = ([System.IO.FileInfo](Join-Path $SourceDirectory $GitStatusArray[1])).FullName
                     Write-Debug $GitSrcFilePath
                     $GitSrcFile = $GitSrcFilePath.Replace("$($SourceDirectory.FullName)", "")
                     $Files["$GitSrcFile"] = @{
