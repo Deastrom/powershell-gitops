@@ -68,10 +68,10 @@ Function Test-GitOpsDrift {
                 If ($GitStatusArray.Count -eq 3) {
                     $GitSrcFilePath = ([System.IO.FileInfo]($GitStatusArray[2])).FullName
                     Write-Debug $GitSrcFilePath
-                    $GitSrcFile = $GitSrcFilePath.Replace("$($SourceDirectory.Path)", "")
+                    $GitSrcFile = $GitSrcFilePath.Replace("$($SourceDirectory.FullName)", "")
                     $GitSrcFileFromFile = ([System.IO.FileInfo]($GitStatusArray[1])).FullName
                     $Files["$GitSrcFile"] = @{
-                        FromFile  = $GitSrcFileFromFile.Replace("$($SourceDirectory.Path)", "")
+                        FromFile  = $GitSrcFileFromFile.Replace("$($SourceDirectory.FullName)", "")
                         GitStatus = $GitStatusArray[0]
                         Checked   = $false
                     }
@@ -79,7 +79,7 @@ Function Test-GitOpsDrift {
                 ElseIf ($GitStatusArray.Count -eq 2) {
                     $GitSrcFilePath = ([System.IO.FileInfo]($GitStatusArray[1])).FullName
                     Write-Debug $GitSrcFilePath
-                    $GitSrcFile = $GitSrcFilePath.Replace("$($SourceDirectory.Path)", "")
+                    $GitSrcFile = $GitSrcFilePath.Replace("$($SourceDirectory.FullName)", "")
                     $Files["$GitSrcFile"] = @{
                         FromFile  = $GitSrcFile
                         GitStatus = $GitStatusArray[0]
