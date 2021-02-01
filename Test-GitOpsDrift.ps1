@@ -51,6 +51,7 @@ Function Test-GitOpsDrift {
             Write-Error "$Destination directory not found."
         }
         $SourceDirectory = Get-Item $Source
+        Write-Debug "$SourceDirectory.FullName"
         $BuildDirectory = Get-Item $Build
         $DestinationDirectory = Invoke-Command -ScriptBlock { Get-Item $using:Destination } @InvCmdParams
         Push-Location $SourceDirectory
