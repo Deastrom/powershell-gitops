@@ -68,8 +68,8 @@ Function Test-GitOpsDrift {
                     $GitSrcFilePath = ([System.IO.FileInfo]($GitStatusArray[2])).FullName
                     Write-Debug $GitSrcFilePath
                     $GitSrcFile = $GitSrcFilePath.Replace("$($SourceDirectory.Path)", "")
+                    $GitSrcFileFromFile = ([System.IO.FileInfo]($GitStatusArray[1])).FullName
                     $Files["$GitSrcFile"] = @{
-                        $GitSrcFileFromFile = ([System.IO.FileInfo]($GitStatusArray[1])).FullName
                         FromFile  = $GitSrcFileFromFile.Replace("$($SourceDirectory.Path)", "")
                         GitStatus = $GitStatusArray[0]
                         Checked   = $false
