@@ -65,15 +65,15 @@ Function Test-GitOpsDrift {
             ForEach ($Line in $GitStatusCmdOutput) {
                 $GitStatusArray = $Line.Split("`t")
                 If ($GitStatusArray.Count -eq 3) {
-                    $GitSrcFile = (Get-Item $GitStatusArray[2]).Path.Replace("$($SourceDirectory.Path)", "")
+                    $GitSrcFile = ([System.IO.FileInfo]($GitStatusArray[2])).FullName.Replace("$($SourceDirectory.Path)", "")
                     $Files["$GitSrcFile"] = @{
-                        FromFile  = (Get-Item $GitStatusArray[1]).Path.Replace("$($SourceDirectory.Path)", "")
+                        FromFile  = ([System.IO.FileInfo]($GitStatusArray[1])).FullName.Replace("$($SourceDirectory.Path)", "")
                         GitStatus = $GitStatusArray[0]
                         Checked   = $false
                     }
                 }
                 ElseIf ($GitStatusArray.Count -eq 2) {
-                    $GitSrcFile = (Get-Item $GitStatusArray[1]).Path.Replace("$($SourceDirectory.Path)", "")
+                    $GitSrcFile = ([System.IO.FileInfo]($GitStatusArray[1])).FullName.Replace("$($SourceDirectory.Path)", "")
                     $Files["$GitSrcFile"] = @{
                         FromFile  = $GitSrcFile
                         GitStatus = $GitStatusArray[0]
