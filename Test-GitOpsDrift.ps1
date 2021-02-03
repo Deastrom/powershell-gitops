@@ -58,10 +58,14 @@ Function Test-GitOpsDrift {
         Try {
             $Files = @{}
             If ($PSBoundParameters['GitTag']) {
-                git diff --relative --name-status $GitTag HEAD | Tee-Object -Variable GitStatusCmdOutput
+                git diff --relative --name-status $GitTag HEAD `
+                | Tee-Object -Variable GitStatusCmdOutput `
+                | Write-Debug
             }
             Else {
-                git diff --relative --name-status HEAD^ HEAD | Tee-Object -Variable GitStatusCmdOutput
+                git diff --relative --name-status HEAD^ HEAD `
+                | Tee-Object -Variable GitStatusCmdOutput `
+                | Write-Debug
             }
             ForEach ($Line in $GitStatusCmdOutput) {
                 $GitStatusArray = $Line.Split("`t")
