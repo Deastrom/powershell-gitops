@@ -19,10 +19,6 @@ Function Test-GitOpsDrift {
         $Destination,
 
         [Parameter()]
-        [System.Management.Automation.Runspaces.PSSession]
-        $ToSession,
-
-        [Parameter()]
         [String]
         $GitTag,
 
@@ -43,17 +39,13 @@ Function Test-GitOpsDrift {
         $SpectoSignature
     )
     Process {
-        $InvCmdParams = @{}
-        If ($PSBoundParameters['ToSession']) {
-            $InvCmdParams.Session = $ToSession
-        }
-        If (-not $(Invoke-Command -ScriptBlock { Test-Path $using:Destination } @InvCmdParams)) {
+        If (-not $(Test-Path $Destination)) {
             Write-Error "$Destination directory not found."
         }
         $SourceDirectory = Get-Item $Source
         Write-Debug "$($SourceDirectory.FullName)"
         $BuildDirectory = Get-Item $Build
-        $DestinationDirectory = Invoke-Command -ScriptBlock { Get-Item $using:Destination } @InvCmdParams
+        $DestinationDirectory = Get-Item $Destination
         Push-Location $SourceDirectory
         Try {
             $Files = @{}
@@ -116,7 +108,7 @@ Function Test-GitOpsDrift {
                     }
                 }
                 $BuildFileHash = Get-FileHash $BuildFile.FullName -ErrorAction SilentlyContinue
-                $DestinationFileHash = Invoke-Command -ScriptBlock { Get-FileHash $using:DestinationFile.FullName -ErrorAction SilentlyContinue } @InvCmdParams
+                $DestinationFileHash = Get-FileHash $DestinationFile.FullName -ErrorAction SilentlyContinue
                 Switch ($File.Value.GitStatus) {
                     'A' {
                         # addition of a file
@@ -182,7 +174,7 @@ Function Test-GitOpsDrift {
                     }
                 }
                 $BuildFileHash = Get-FileHash $BuildFile.FullName
-                $DestinationFileHash = Invoke-Command -ScriptBlock { Get-FileHash $using:DestinationFile.FullName -ErrorAction SilentlyContinue } @InvCmdParams
+                $DestinationFileHash = Get-FileHash $DestinationFile.FullName -ErrorAction SilentlyContinue
                 Write-Verbose "$SourceFileRelPath has no changes since the last build. $($BuildFile.FullName) should match $($DestinationFile.FullName)."
                 If ($null -eq $DestinationFileHash) {
                     Write-Warning "$SourceFileRelPath has no changes since the last build. $($DesinationFile.FullName) was not found."

@@ -20,9 +20,6 @@ Function Deploy-GitOpsBuild {
     .PARAMETER Source
     Not Used in this function. Added for splatting purposes.
 
-    .PARAMETER ToSession
-    Session where the Destination can be found. Can be null to represent local.
-
     .INPUTS
     System.IO.DirectoryInfo can be piped into Build.
 
@@ -42,41 +39,32 @@ Function Deploy-GitOpsBuild {
             })]
         [String]
         $Destination,
-        [System.Management.Automation.Runspaces.PSSession]
-        $ToSession,
         [String]
         $Source
     )
     Process {
-        $CopyParams = @{}
-        $InvCmdParams = @{}
-        If ($PSBoundParameters['ToSession']) {
-            Write-Verbose "Using $($ToSession | Select-Object -Property * | ConvertTo-Json)"
-            $CopyParams.ToSession = $ToSession
-            $InvCmdParams.Session = $ToSession
-        }
         $BuildDirectory = Get-Item -Path $Build
-        If (-not $(Invoke-Command -ScriptBlock { Test-Path $using:Destination } @InvCmdParams)) {
+        If (-not $(Test-Path $Destination )) {
             Write-Verbose "Creating $Destination directory"
-            Invoke-Command -ScriptBlock { New-Item $using:Destination -ItemType Directory } @InvCmdParams | Out-Null
+            New-Item $Destination -ItemType Directory | Write-Verbose
         }
-        $DestinationDirectory = Invoke-Command -ScriptBlock { Get-Item $using:Destination } @InvCmdParams
+        $DestinationDirectory = Get-Item $Destination
         ForEach ($BuildFile in $(Get-ChildItem $BuildDirectory -Recurse -File)) {
             $DestinationFile = @{
                 FullName = Join-Path -Path $DestinationDirectory.FullName -ChildPath $BuildFile.FullName.Replace($BuildDirectory.FullName,"")
                 Directory = Join-Path -Path $DestinationDirectory.FullName -ChildPath $BuildFile.Directory.Fullname.Replace($BuildDirectory.FullName, "")
             }
             $BuildFileHash = Get-FileHash $BuildFile
-            $DestinationFileHash = Invoke-Command -ScriptBlock { Get-FileHash $using:DestinationFile.FullName -ErrorAction SilentlyContinue } @InvCmdParams
+            $DestinationFileHash = Get-FileHash $DestinationFile.FullName -ErrorAction SilentlyContinue
             If ($DestinationFileHash -and ($BuildFileHash.Hash -eq $DestinationFileHash.Hash)) {
                 Write-Verbose "$($DestinationFileHash.Path) hash matches $($BuildFileHash.Path) hash, not copying."
             } Else {
                 Write-Verbose "Copying $($BuildFile.FullName) to $($DestinationFile.FullName)"
-                if (-Not $(Invoke-Command -ScriptBlock { Test-Path $using:DestinationFile.Directory } @InvCmdParams)) {
+                if (-Not $(Test-Path $DestinationFile.Directory)) {
                     Write-Verbose "Creating $($DestinationFile.Directory) directory"
-                    Invoke-Command -ScriptBlock { New-Item $using:DestinationFile.Directory -ItemType Directory } @InvCmdParams | Out-Null
+                    New-Item $DestinationFile.Directory -ItemType Directory | Write-Verbose
                 }
-                Copy-Item $BuildFile -Destination $DestinationFile.FullName @CopyParams
+                Copy-Item $BuildFile -Destination $DestinationFile.FullName
             }
         }
     }
