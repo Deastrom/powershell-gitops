@@ -157,7 +157,7 @@ Function Test-GitOpsDrift {
                     Continue
                 }
                 $SourceFileRelPath = $SourceFile.FullName.Replace($SourceDirectory.FullName, "")
-                If ($Files.ContainsKey($SourceFileRelPath)) {
+                If ($GitSrcFiles.ContainsKey($SourceFileRelPath)) {
                     Write-Verbose "$SourceFileRelPath was already checked during Git Diff handling."
                     Continue
                 }
