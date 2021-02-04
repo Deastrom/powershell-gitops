@@ -49,18 +49,13 @@ Function Build-GitOpsSource {
     `git diff --no-index Source Destination` when doing  This aids in the troublshooting
     of Template files.
 
-    .INPUTS
-    None.  No values should be piped into this function
-
-    .OUTPUTS
-    None
-
     .LINK
     EPS ( Embedded PowerShell )
     https://github.com/straightdave/eps
 
     .COMPONENT
     EPS
+    
     #>
     [CmdletBinding(SupportsShouldProcess = $true)]
     param (

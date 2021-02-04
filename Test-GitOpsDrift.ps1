@@ -1,4 +1,41 @@
 Function Test-GitOpsDrift {
+    <#
+    .SYNOPSIS
+    Checks the Source Directory's Git Diff and uses that information to help determine drift in the
+    Destination Directory.
+
+    .DESCRIPTION
+    Run Git Diff on the Source Directory then determines each file's Build Directory representation.
+    Checks the Hash of the file in the Build Directory against the Destination Directory and, based
+    on the Git Diff, writes a warning if the hashes don't match when they should, or match when they
+    shouldn't, or don't exist when they should, or exist when they shouldn't.
+
+    .PARAMETER Build
+    The Directory which holds the built representations of the Source Directory.
+
+    .PARAMETER Source
+    The Directory which holds the source.
+
+    .PARAMETER Destination
+    The Directory which holds the built represenations as they exist on the target system. Use PSDrive
+    to map remote systems.
+
+    .PARAMETER GitTag
+    Used in the Git Diff call.
+
+    .PARAMETER Exclude
+    Regex which determines files that should be skipped.
+
+    .PARAMETER TemplateExtension
+    The extension of template files, used to determine the name of the built representation.
+
+    .PARAMETER SpectoCommon
+    The string that indicates that a file is intended to be Specific To (SpecTo) a system.
+
+    .PARAMETER SpectoSignature
+    The string that indicates that a specto file is to be copied in this run.
+    
+    #>
     param(
         [ValidateScript( {
                 Test-Path $_ -PathType Container

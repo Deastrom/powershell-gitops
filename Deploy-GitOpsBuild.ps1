@@ -19,12 +19,7 @@ Function Deploy-GitOpsBuild {
 
     .PARAMETER Source
     Not Used in this function. Added for splatting purposes.
-
-    .INPUTS
-    None.  No values are to be piped into this function.
-
-    .OUTPUTs
-    None
+    
     #>
     [CmdletBinding(SupportsShouldProcess = $true)]
     param(
