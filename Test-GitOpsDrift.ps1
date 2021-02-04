@@ -21,7 +21,7 @@ Function Test-GitOpsDrift {
     to map remote systems.
 
     .PARAMETER GitTag
-    Used in the Git Diff call.
+    Used in the Git Diff call. Not currently implemented as it is not supported in Deploy-GitOpsBuild.
 
     .PARAMETER Exclude
     Regex which determines files that should be skipped.
@@ -34,7 +34,7 @@ Function Test-GitOpsDrift {
 
     .PARAMETER SpectoSignature
     The string that indicates that a specto file is to be copied in this run.
-    
+
     #>
     param(
         [ValidateScript( {
@@ -55,9 +55,9 @@ Function Test-GitOpsDrift {
         [String]
         $Destination,
 
-        [Parameter()]
-        [String]
-        $GitTag,
+        # [Parameter()]
+        # [String]
+        # $GitTag,
 
         [Parameter()]
         [Regex]
