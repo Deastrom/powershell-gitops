@@ -48,7 +48,7 @@ Function Test-GitOpsDrift {
         $DestinationDirectory = Get-Item $Destination
         Push-Location $SourceDirectory
         Try {
-            $Files = @{}
+            $GitSrcFiles = @{}
             If ($PSBoundParameters['GitTag']) {
                 git diff --relative --name-status $GitTag HEAD `
                 | Tee-Object -Variable GitStatusCmdOutput `
@@ -64,13 +64,13 @@ Function Test-GitOpsDrift {
                 Write-Debug $GitStatusArray.Count
                 If ($GitStatusArray.Count -eq 3) {
                     $GitSrcFileInfo = [System.IO.FileInfo](Join-Path $SourceDirectory $GitStatusArray[2])
-                    Write-Debug "$($GitSrcFileInfo | Select-Object -Property *)"
                     $GitSrcFile = $GitSrcFileInfo.FullName.Replace("$($SourceDirectory.FullName)", "")
                     $GitSrcFromFileInfo = [System.IO.FileInfo](Join-Path $SourceDirectory $GitStatusArray[1])
-                    $Files["$GitSrcFile"] = @{
+                    $GitSrcFromFile = $GitSrcFromFileInfo.FullName.Replace("$($SourceDirectory.FullName)", "")
+                    $GitSrcFiles["$GitSrcFile"] = @{
                         FullName = $GitSrcFileInfo.FullName
                         Parent = $GitSrcFileInfo.DirectoryName
-                        FromFile  = $GitSrcFromFileInfo.FullName.Replace("$($SourceDirectory.FullName)", "")
+                        FromFile  = $GitSrcFromFile
                         GitStatus = $GitStatusArray[0]
                     }
                 }
@@ -78,7 +78,7 @@ Function Test-GitOpsDrift {
                     $GitSrcFileInfo = [System.IO.FileInfo](Join-Path $SourceDirectory $GitStatusArray[1])
                     Write-Debug "$($GitSrcFileInfo | Select-Object -Property *)"
                     $GitSrcFile = $GitSrcFileInfo.FullName.Replace("$($SourceDirectory.FullName)", "")
-                    $Files["$GitSrcFile"] = @{
+                    $GitSrcFiles["$GitSrcFile"] = @{
                         FullName = $GitSrcFileInfo.FullName
                         Parent = $GitSrcFileInfo.DirectoryName
                         FromFile  = $GitSrcFile
@@ -86,8 +86,8 @@ Function Test-GitOpsDrift {
                     }
                 }
             }
-            Write-Debug "$($Files | ConvertTo-Json -Depth 100)"
-            ForEach ($File in $($Files.GetEnumerator())) {
+            Write-Debug "$($GitSrcFiles | ConvertTo-Json -Depth 100)"
+            ForEach ($File in $($GitSrcFiles.GetEnumerator())) {
                 $BuildFile = @{
                     FullName = Join-Path -Path $BuildDirectory.FullName -ChildPath $File.Key
                     Directory = Join-Path -Path $BuildDirectory.FullName -ChildPath $File.Value.Parent.Replace("$($SourceDirectory.FullName)", "")
