@@ -1,4 +1,41 @@
 Function Test-GitOpsDrift {
+    <#
+    .SYNOPSIS
+    Checks the Source Directory's Git Diff and uses that information to help determine drift in the
+    Destination Directory.
+
+    .DESCRIPTION
+    Run Git Diff on the Source Directory then determines each file's Build Directory representation.
+    Checks the Hash of the file in the Build Directory against the Destination Directory and, based
+    on the Git Diff, writes a warning if the hashes don't match when they should, or match when they
+    shouldn't, or don't exist when they should, or exist when they shouldn't.
+
+    .PARAMETER Build
+    The Directory which holds the built representations of the Source Directory.
+
+    .PARAMETER Source
+    The Directory which holds the source.
+
+    .PARAMETER Destination
+    The Directory which holds the built represenations as they exist on the target system. Use PSDrive
+    to map remote systems.
+
+    .PARAMETER GitTag
+    Used in the Git Diff call. Not currently implemented as it is not supported in Deploy-GitOpsBuild.
+
+    .PARAMETER Exclude
+    Regex which determines files that should be skipped.
+
+    .PARAMETER TemplateExtension
+    The extension of template files, used to determine the name of the built representation.
+
+    .PARAMETER SpectoCommon
+    The string that indicates that a file is intended to be Specific To (SpecTo) a system.
+
+    .PARAMETER SpectoSignature
+    The string that indicates that a specto file is to be copied in this run.
+
+    #>
     param(
         [ValidateScript( {
                 Test-Path $_ -PathType Container
@@ -18,13 +55,9 @@ Function Test-GitOpsDrift {
         [String]
         $Destination,
 
-        [Parameter()]
-        [System.Management.Automation.Runspaces.PSSession]
-        $ToSession,
-
-        [Parameter()]
-        [String]
-        $GitTag,
+        # [Parameter()]
+        # [String]
+        # $GitTag,
 
         [Parameter()]
         [Regex]
@@ -43,20 +76,16 @@ Function Test-GitOpsDrift {
         $SpectoSignature
     )
     Process {
-        $InvCmdParams = @{}
-        If ($PSBoundParameters['ToSession']) {
-            $InvCmdParams.Session = $ToSession
-        }
-        If (-not $(Invoke-Command -ScriptBlock { Test-Path $using:Destination } @InvCmdParams)) {
+        If (-not $(Test-Path $Destination)) {
             Write-Error "$Destination directory not found."
         }
         $SourceDirectory = Get-Item $Source
         Write-Debug "$($SourceDirectory.FullName)"
         $BuildDirectory = Get-Item $Build
-        $DestinationDirectory = Invoke-Command -ScriptBlock { Get-Item $using:Destination } @InvCmdParams
+        $DestinationDirectory = Get-Item $Destination
         Push-Location $SourceDirectory
         Try {
-            $Files = @{}
+            $GitSrcFiles = @{}
             If ($PSBoundParameters['GitTag']) {
                 git diff --relative --name-status $GitTag HEAD `
                 | Tee-Object -Variable GitStatusCmdOutput `
@@ -72,13 +101,13 @@ Function Test-GitOpsDrift {
                 Write-Debug $GitStatusArray.Count
                 If ($GitStatusArray.Count -eq 3) {
                     $GitSrcFileInfo = [System.IO.FileInfo](Join-Path $SourceDirectory $GitStatusArray[2])
-                    Write-Debug "$($GitSrcFileInfo | Select-Object -Property *)"
                     $GitSrcFile = $GitSrcFileInfo.FullName.Replace("$($SourceDirectory.FullName)", "")
                     $GitSrcFromFileInfo = [System.IO.FileInfo](Join-Path $SourceDirectory $GitStatusArray[1])
-                    $Files["$GitSrcFile"] = @{
+                    $GitSrcFromFile = $GitSrcFromFileInfo.FullName.Replace("$($SourceDirectory.FullName)", "")
+                    $GitSrcFiles["$GitSrcFile"] = @{
                         FullName = $GitSrcFileInfo.FullName
                         Parent = $GitSrcFileInfo.DirectoryName
-                        FromFile  = $GitSrcFromFileInfo.FullName.Replace("$($SourceDirectory.FullName)", "")
+                        FromFile  = $GitSrcFromFile
                         GitStatus = $GitStatusArray[0]
                     }
                 }
@@ -86,7 +115,7 @@ Function Test-GitOpsDrift {
                     $GitSrcFileInfo = [System.IO.FileInfo](Join-Path $SourceDirectory $GitStatusArray[1])
                     Write-Debug "$($GitSrcFileInfo | Select-Object -Property *)"
                     $GitSrcFile = $GitSrcFileInfo.FullName.Replace("$($SourceDirectory.FullName)", "")
-                    $Files["$GitSrcFile"] = @{
+                    $GitSrcFiles["$GitSrcFile"] = @{
                         FullName = $GitSrcFileInfo.FullName
                         Parent = $GitSrcFileInfo.DirectoryName
                         FromFile  = $GitSrcFile
@@ -94,8 +123,12 @@ Function Test-GitOpsDrift {
                     }
                 }
             }
-            Write-Debug "$($Files | ConvertTo-Json -Depth 100)"
-            ForEach ($File in $($Files.GetEnumerator())) {
+            Write-Debug "$($GitSrcFiles | ConvertTo-Json -Depth 100)"
+            ForEach ($File in $($GitSrcFiles.GetEnumerator())) {
+                If ($Exclude -and ($File.Key -match $Exclude)) {
+                    Write-Verbose "$($File.Key) Excluded"
+                    Continue
+                }
                 $BuildFile = @{
                     FullName = Join-Path -Path $BuildDirectory.FullName -ChildPath $File.Key
                     Directory = Join-Path -Path $BuildDirectory.FullName -ChildPath $File.Value.Parent.Replace("$($SourceDirectory.FullName)", "")
@@ -116,7 +149,7 @@ Function Test-GitOpsDrift {
                     }
                 }
                 $BuildFileHash = Get-FileHash $BuildFile.FullName -ErrorAction SilentlyContinue
-                $DestinationFileHash = Invoke-Command -ScriptBlock { Get-FileHash $using:DestinationFile.FullName -ErrorAction SilentlyContinue } @InvCmdParams
+                $DestinationFileHash = Get-FileHash $DestinationFile.FullName -ErrorAction SilentlyContinue
                 Switch ($File.Value.GitStatus) {
                     'A' {
                         # addition of a file
@@ -156,8 +189,12 @@ Function Test-GitOpsDrift {
                 }
             }
             ForEach ($SourceFile in $(Get-ChildItem $SourceDirectory.FullName -Recurse -File)) {
+                If ($Exclude -and ($SourceFile.FullName -match $Exclude)) {
+                    Write-Verbose "$($SourceFile.FullName) Excluded"
+                    Continue
+                }
                 $SourceFileRelPath = $SourceFile.FullName.Replace($SourceDirectory.FullName, "")
-                If ($Files.ContainsKey($SourceFileRelPath)) {
+                If ($GitSrcFiles.ContainsKey($SourceFileRelPath)) {
                     Write-Verbose "$SourceFileRelPath was already checked during Git Diff handling."
                     Continue
                 }
@@ -182,7 +219,7 @@ Function Test-GitOpsDrift {
                     }
                 }
                 $BuildFileHash = Get-FileHash $BuildFile.FullName
-                $DestinationFileHash = Invoke-Command -ScriptBlock { Get-FileHash $using:DestinationFile.FullName -ErrorAction SilentlyContinue } @InvCmdParams
+                $DestinationFileHash = Get-FileHash $DestinationFile.FullName -ErrorAction SilentlyContinue
                 Write-Verbose "$SourceFileRelPath has no changes since the last build. $($BuildFile.FullName) should match $($DestinationFile.FullName)."
                 If ($null -eq $DestinationFileHash) {
                     Write-Warning "$SourceFileRelPath has no changes since the last build. $($DesinationFile.FullName) was not found."

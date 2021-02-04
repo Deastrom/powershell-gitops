@@ -49,22 +49,17 @@ Function Build-GitOpsSource {
     `git diff --no-index Source Destination` when doing  This aids in the troublshooting
     of Template files.
 
-    .INPUTS
-    System.IO.DirectoryInfo can be piped into Source.
-
-    .OUTPUTS
-    None
-
     .LINK
     EPS ( Embedded PowerShell )
     https://github.com/straightdave/eps
 
     .COMPONENT
     EPS
+    
     #>
     [CmdletBinding(SupportsShouldProcess = $true)]
     param (
-        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
+        [Parameter(Mandatory = $true)]
         [ValidateScript( {
                 Test-Path $_ -PathType Container
             })]
