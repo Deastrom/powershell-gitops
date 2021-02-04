@@ -21,14 +21,14 @@ Function Deploy-GitOpsBuild {
     Not Used in this function. Added for splatting purposes.
 
     .INPUTS
-    System.IO.DirectoryInfo can be piped into Build.
+    None.  No values are to be piped into this function.
 
     .OUTPUTs
     None
     #>
     [CmdletBinding(SupportsShouldProcess = $true)]
     param(
-        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
+        [Parameter(Mandatory = $true)]
         [ValidateScript( {
                 Test-Path $_ -PathType Container
             })]

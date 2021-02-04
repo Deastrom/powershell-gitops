@@ -50,7 +50,7 @@ Function Build-GitOpsSource {
     of Template files.
 
     .INPUTS
-    System.IO.DirectoryInfo can be piped into Source.
+    None.  No values should be piped into this function
 
     .OUTPUTS
     None
@@ -64,7 +64,7 @@ Function Build-GitOpsSource {
     #>
     [CmdletBinding(SupportsShouldProcess = $true)]
     param (
-        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
+        [Parameter(Mandatory = $true)]
         [ValidateScript( {
                 Test-Path $_ -PathType Container
             })]
