@@ -88,6 +88,10 @@ Function Test-GitOpsDrift {
             }
             Write-Debug "$($GitSrcFiles | ConvertTo-Json -Depth 100)"
             ForEach ($File in $($GitSrcFiles.GetEnumerator())) {
+                If ($Exclude -and ($File.Key -match $Exclude)) {
+                    Write-Verbose "$($File.Key) Excluded"
+                    Continue
+                }
                 $BuildFile = @{
                     FullName = Join-Path -Path $BuildDirectory.FullName -ChildPath $File.Key
                     Directory = Join-Path -Path $BuildDirectory.FullName -ChildPath $File.Value.Parent.Replace("$($SourceDirectory.FullName)", "")
@@ -148,6 +152,10 @@ Function Test-GitOpsDrift {
                 }
             }
             ForEach ($SourceFile in $(Get-ChildItem $SourceDirectory.FullName -Recurse -File)) {
+                If ($Exclude -and ($SourceFile.FullName -match $Exclude)) {
+                    Write-Verbose "$($SourceFile.FullName) Excluded"
+                    Continue
+                }
                 $SourceFileRelPath = $SourceFile.FullName.Replace($SourceDirectory.FullName, "")
                 If ($Files.ContainsKey($SourceFileRelPath)) {
                     Write-Verbose "$SourceFileRelPath was already checked during Git Diff handling."
