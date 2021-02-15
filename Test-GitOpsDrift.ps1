@@ -167,7 +167,7 @@ Function Test-GitOpsDrift {
                     'M' {
                         # modification of the contents or mode of a file
                         Write-Warning "$($File.Key) was Modified since last build, $($DestinationFile.FullName) shoudl be different than Source and overwritten."
-                        If ($null -ne $DestinationFilehash) {
+                        If ($null -eq $DestinationFilehash) {
                             Write-Warning "$($File.Key) was Modified but $($DestinationFile.FullName) was not found."
                         } ElseIf ($BuildFileHash.Hash -eq $DestinationFileHash.Hash) {
                             Write-Warning "$($File.Key) was Modified but $($DestinationFile.FullName) matches the hash of the $($Buildfile.FullName) file. File may have already been deployed."
