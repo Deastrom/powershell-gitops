@@ -166,7 +166,7 @@ Function Test-GitOpsDrift {
                     }
                     'M' {
                         # modification of the contents or mode of a file
-                        Write-Warning "$($File.Key) was Modified since last build, $($DestinationFile.FullName) shoudl be different than Source and overwritten."
+                        Write-Verbose "$($File.Key) was Modified since last build, $($DestinationFile.FullName) should be different than Source and overwritten."
                         If ($null -eq $DestinationFilehash) {
                             Write-Warning "$($File.Key) was Modified but $($DestinationFile.FullName) was not found."
                         } ElseIf ($BuildFileHash.Hash -eq $DestinationFileHash.Hash) {
