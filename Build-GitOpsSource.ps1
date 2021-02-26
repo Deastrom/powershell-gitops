@@ -87,13 +87,13 @@ Function Build-GitOpsSource {
     )
 
     Process {
+        Write-Verbose "Get the Directory Info for Source and Directory"
+        $SourceDirectory = Get-Item -Path $Source
         Write-Verbose "Set Location to $Source to provide context for git commands."
         Push-Location $Source
         # See https://github.com/straightdave/eps for more information
         Write-Verbose "Import the EPS module which will be used for Template files with the $TemplateExtension extension."
         Import-Module EPS
-        Write-Verbose "Get the Directory Info for Source and Directory"
-        $SourceDirectory = Get-Item -Path $Source
         If (-not $(Test-Path $Build)) {
             New-Item $Build -ItemType Directory | Out-Null
         }
